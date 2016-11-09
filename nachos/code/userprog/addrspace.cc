@@ -178,6 +178,45 @@ ProcessAddrSpace::~ProcessAddrSpace()
    delete NachOSpageTable;
 }
 
+
+int
+ProcessAddrSpace::createShmPage(int shmSize)
+{
+
+    numPagesInVM = parentSpace->GetNumPages();
+    unsigned i, size = numPagesInVM * PageSize;
+
+    ASSERT(numPagesInVM+numPagesAllocated <= NumPhysPages);                // check we're not trying
+                                                                                // to run anything too big --
+                                                                                // at least until we have
+                                                                                // virtual memory
+
+    DEBUG('a', "Initializing address space, num pages %d, size %d\n",
+                                        numPagesInVM, size);
+    // first, set up the translation
+    TranslationEntry* parentPageTable = parentSpace->GetPageTable();
+    NachOSpageTable = new TranslationEntry[numPagesInVM];
+    for (i = 0; i < numPagesInVM; i++) {
+        NachOSpageTable[i].virtualPage = i;
+        NachOSpageTable[i].physicalPage = i+numPagesAllocated;
+        NachOSpageTable[i].valid = parentPageTable[i].valid;
+        NachOSpageTable[i].use = parentPageTable[i].use;
+        NachOSpageTable[i].dirty = parentPageTable[i].dirty;
+        NachOSpageTable[i].readOnly = parentPageTable[i].readOnly;      // if the code segment was entirely on
+                                                    // a separate page, we could set its
+                                                    // pages to be read-only
+    }
+
+    // Copy the contents
+    unsigned startAddrParent = parentPageTable[0].physicalPage*PageSize;
+    unsigned startAddrChild = numPagesAllocated*PageSize;
+    for (i=0; i<size; i++) {
+       machine->mainMemory[startAddrChild+i] = machine->mainMemory[startAddrParent+i];
+    }
+
+    numPagesAllocated += numPagesInVM;
+
+}
 //----------------------------------------------------------------------
 // ProcessAddrSpace::InitUserCPURegisters
 // 	Set the initial values for the user-level register set.
