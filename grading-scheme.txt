@@ -1,0 +1,8 @@
+Point allocated for correct implementation of each component is listed below.
+
+Shared memory implementation		:	20 points
+Basic demand paging			:	40 points (Must work with large NumPhysPages)
+Page replacement algorithms		:	30 points (Random: 5, FIFO: 5, LRU: 12, LRU-CLOCK: 8)
+Explanations in report			:	10 points
+-----------------------------------------------------------
+TOTAL					:      100 points
