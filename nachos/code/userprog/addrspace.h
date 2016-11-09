@@ -37,7 +37,7 @@ class ProcessAddrSpace {
     unsigned GetNumPages();
 
     TranslationEntry* GetPageTable();
-    int createShmPage(int shmSize);
+    unsigned createShmPage(int shmSize);
 
   private:
     TranslationEntry *NachOSpageTable;	// Assume linear page table translation

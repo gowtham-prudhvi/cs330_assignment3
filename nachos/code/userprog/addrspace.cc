@@ -93,7 +93,9 @@ ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
 	NachOSpageTable[i].valid = TRUE;
 	NachOSpageTable[i].use = FALSE;
 	NachOSpageTable[i].dirty = FALSE;
-	NachOSpageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
+	NachOSpageTable[i].readOnly = FALSE;
+    NachOSpageTable[i].shared = FALSE;
+      // if the code segment was entirely on 
 					// a separate page, we could set its 
 					// pages to be read-only
     }
@@ -153,7 +155,9 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
         NachOSpageTable[i].valid = parentPageTable[i].valid;
         NachOSpageTable[i].use = parentPageTable[i].use;
         NachOSpageTable[i].dirty = parentPageTable[i].dirty;
-        NachOSpageTable[i].readOnly = parentPageTable[i].readOnly;  	// if the code segment was entirely on
+        NachOSpageTable[i].readOnly = parentPageTable[i].readOnly;  
+        NachOSpageTable[i].shared = parentPageTable[i].shared;
+        	// if the code segment was entirely on
                                         			// a separate page, we could set its
                                         			// pages to be read-only
     }
@@ -179,12 +183,19 @@ ProcessAddrSpace::~ProcessAddrSpace()
 }
 
 
-int
+unsigned
 ProcessAddrSpace::createShmPage(int shmSize)
 {
 
-    numPagesInVM = parentSpace->GetNumPages();
-    unsigned i, size = numPagesInVM * PageSize;
+    unsigned prevnumPages = GetNumPages();
+    TranslationEntry* prevPageTable=GetPageTable();
+    unsigned extraPages=shmSize/PageSize;
+    if (shmSize%PageSize)
+    {
+        extraPages++;
+    }
+    unsigned numPagesInVM+=extraPages;
+    unsigned i,j, size = numPagesInVM * PageSize;
 
     ASSERT(numPagesInVM+numPagesAllocated <= NumPhysPages);                // check we're not trying
                                                                                 // to run anything too big --
@@ -194,27 +205,43 @@ ProcessAddrSpace::createShmPage(int shmSize)
     DEBUG('a', "Initializing address space, num pages %d, size %d\n",
                                         numPagesInVM, size);
     // first, set up the translation
-    TranslationEntry* parentPageTable = parentSpace->GetPageTable();
     NachOSpageTable = new TranslationEntry[numPagesInVM];
-    for (i = 0; i < numPagesInVM; i++) {
+    for (i = 0; i < prevnumPages; i++) {
         NachOSpageTable[i].virtualPage = i;
-        NachOSpageTable[i].physicalPage = i+numPagesAllocated;
-        NachOSpageTable[i].valid = parentPageTable[i].valid;
-        NachOSpageTable[i].use = parentPageTable[i].use;
-        NachOSpageTable[i].dirty = parentPageTable[i].dirty;
-        NachOSpageTable[i].readOnly = parentPageTable[i].readOnly;      // if the code segment was entirely on
+        NachOSpageTable[i].physicalPage = parentPageTable[i].physicalPage;
+        NachOSpageTable[i].valid = prevPageTable[i].valid;
+        NachOSpageTable[i].use = prevPageTable[i].use;
+        NachOSpageTable[i].dirty = prevPageTable[i].dirty;
+        NachOSpageTable[i].readOnly = prevPageTable[i].readOnly; // if the code segment was entirely on
+         NachOSpageTable[i].shared = prevPageTable[i].shared;                                             // a separate page, we could set its
+                                                    // pages to be read-only
+    }
+
+    for (i = prevnumPages,j=0; i < numPagesInVM; i++,j++) {
+        NachOSpageTable[i].virtualPage = i;
+        NachOSpageTable[i].physicalPage = j+numPagesAllocated;
+        NachOSpageTable[i].valid = TRUE;
+        NachOSpageTable[i].use = FALSE;
+        NachOSpageTable[i].dirty = FALSE;
+        NachOSpageTable[i].readOnly = FALSE; 
+        NachOSpageTable[i].shared=TRUE;
+
                                                     // a separate page, we could set its
                                                     // pages to be read-only
     }
 
-    // Copy the contents
-    unsigned startAddrParent = parentPageTable[0].physicalPage*PageSize;
-    unsigned startAddrChild = numPagesAllocated*PageSize;
-    for (i=0; i<size; i++) {
-       machine->mainMemory[startAddrChild+i] = machine->mainMemory[startAddrParent+i];
-    }
+    
 
-    numPagesAllocated += numPagesInVM;
+
+    bzero(&machine->mainMemory[numPagesAllocated*PageSize], size);
+
+    numPagesAllocated += extraPages;
+    delete prevPageTable;
+
+    machine->NachOSpageTable=NachOSpageTable;
+    machine->NachOSpageTableSize=numPagesInVM*PageSize;
+    return prevnumPages*PageSize;
+
 
 }
 //----------------------------------------------------------------------
