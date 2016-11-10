@@ -41,7 +41,7 @@ StartUserProcess(char *filename)
     space = new ProcessAddrSpace(executable);    
     currentThread->space = space;
 
-    delete executable;			// close file
+    // delete executable;			// close file
 
     space->InitUserCPURegisters();		// set the initial register values
     space->RestoreStateOnSwitch();		// load page table register

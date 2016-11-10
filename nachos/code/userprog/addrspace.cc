@@ -18,7 +18,7 @@
 #include "copyright.h"
 #include "system.h"
 #include "addrspace.h"
-#include "noff.h"
+// #include "noff.h"
 
 //----------------------------------------------------------------------
 // SwapHeader
@@ -57,9 +57,12 @@ SwapHeader (NoffHeader *noffH)
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
+ProcessAddrSpace::ProcessAddrSpace(OpenFile *prog)
 {
-    NoffHeader noffH;
+    // NoffHeader noffH;
+
+    executable = prog;
+
     unsigned int i, size;
     // unsigned vpn, offset;
     // TranslationEntry *entry;
@@ -100,11 +103,15 @@ ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
 					// pages to be read-only
     NachOSpageTable[i].shared = FALSE;
     }
+
+    numSharedPages = 0;
+    numValidPages = 0;
+    /*
 // zero out the entire address space, to zero the unitialized data segment 
 // and the stack segment
     bzero(&machine->mainMemory[numPagesAllocated*PageSize], size);
  
-    numPagesAllocated += numPagesInVM;
+    // numPagesAllocated += numPagesInVM;
 
 // then, copy in the code and data segments into memory
     if (noffH.code.size > 0) {
@@ -126,10 +133,9 @@ ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
         pageFrame = entry->physicalPage;
         executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize + offset]),
 			noffH.initData.size, noffH.initData.inFileAddr);
-    }
+    }*/
 
-    numSharedPages = 0;
-    numValidPages = 0;
+    
 
 }
 

@@ -191,6 +191,8 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     TranslationEntry *entry;
     unsigned int pageFrame;
 
+    int flag = 0;
+
     DEBUG('a', "\tTranslate 0x%x, %s: ", virtAddr, writing ? "write" : "read");
 
 // check for alignment errors
@@ -214,11 +216,42 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 			virtAddr, NachOSpageTableSize);
 	    return AddressErrorException;
 	} else if (!NachOSpageTable[vpn].valid) {
-	    DEBUG('a', "virtual page # %d too large for page table size %d!\n", 
-			virtAddr, NachOSpageTableSize);
-	    return PageFaultException;
+	    if (currentThead->space->validPages < currentThead->space->GetNumPages()) {
+        flag = 1;
+      }
+      else {
+        DEBUG('a', "virtual page # %d too large for page table size %d!\n", 
+          virtAddr, NachOSpageTableSize);
+        return PageFaultException;
+      }
 	}
 	entry = &NachOSpageTable[vpn];
+
+  // code for demand paging
+  if (flag) {
+    // handling of page faults
+    OpenFile *executable = currentThead->space->executable;
+    NoffHeader noffH = currentThead->space->noffH;
+    unsigned int numPagesInVM = currentThead->space->GetNumPages();
+    unsigned int size = numPagesInVM * PageSize;
+
+    entry->physicalPage = numPagesAllocated;
+    pageFrame = entry->physicalPage;
+
+    bzero(&machine->mainMemory[numPagesAllocated*PageSize], PageSize);
+  
+    if (vpn == numPagesInVM - 1) {
+      executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize]),(size - vpn * PageSize), noffH.code.inFileAddr + vpn * PageSize);
+    }
+    else {
+      executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize]), PageSize, noffH.code.inFileAddr + vpn * PageSize);
+    }
+
+
+    entry->valid = TRUE;
+    
+    numPagesAllocated += 1;
+  }
     } else {
         for (entry = NULL, i = 0; i < TLBSize; i++)
     	    if (tlb[i].valid && (tlb[i].virtualPage == vpn)) {
