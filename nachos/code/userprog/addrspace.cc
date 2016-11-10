@@ -348,3 +348,18 @@ ProcessAddrSpace::GetPageTable()
 {
    return NachOSpageTable;
 }
+
+void ProcessAddrSpace::freePages() {
+    int i = 0, *temp;
+
+
+    while (i < numPagesInVM) {
+        if (NachOSpageTable[i].valid && !NachOSpageTable[i].shared) {
+            temp = new int(NachOSpageTable[i].physicalPage);
+            ListOfFreedPages->Append((void *)temp);
+        }
+
+        i += 1;
+    }
+    delete NachOSpageTable;
+}

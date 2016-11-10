@@ -19,6 +19,9 @@ Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
 
+List *ListOfFreedPages;
+
+
 unsigned numPagesAllocated;              // number of physical frames allocated
 
 NachOSThread *threadArray[MAX_THREAD_COUNT];  // Array of thread pointers
@@ -115,6 +118,10 @@ Initialize(int argc, char **argv)
 
     initializedConsoleSemaphores = false;
     numPagesAllocated = 0;
+
+
+
+    ListOfFreedPages = new List();
 
     schedulingAlgo = NON_PREEMPTIVE_BASE;	// Default
 

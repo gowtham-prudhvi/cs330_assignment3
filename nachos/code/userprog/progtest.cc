@@ -54,6 +54,35 @@ StartUserProcess(char *filename)
 					// by doing the syscall "exit"
 }
 
+void BeginExec(char *filename) {
+  OpenFile *executable = fileSystem->Open(filename);
+  ProcessAddrSpace *space;
+
+  if (executable == NULL) {
+    printf("Unable to open file%s\n", filename);
+    return;
+  }
+
+  currentThread->space->freePages();
+  space = new ProcessAddrSpace(executable);
+  currentThread->space = space;
+  strcpy(space->filename, filename);
+
+
+  delete executable;
+
+
+  space->InitUserCPURegisters();    // set the initial register values
+    space->RestoreStateOnSwitch();    // load page table register
+
+    machine->Run();     // jump to the user progam
+    ASSERT(FALSE);      // machine->Run never returns;
+          // the address space exits
+          // by doing the syscall "exit"
+  
+}
+
+
 // Data structures needed for the console test.  Threads making
 // I/O requests wait on a Semaphore to delay until the I/O completes.
 

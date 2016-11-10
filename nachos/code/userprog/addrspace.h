@@ -34,7 +34,7 @@ class ProcessAddrSpace {
 
     void SaveStateOnSwitch();			// Save/restore address space-specific
     void RestoreStateOnSwitch();		// info on a context switch
-
+    void freePages();
     unsigned GetNumPages();
 
     TranslationEntry* GetPageTable();

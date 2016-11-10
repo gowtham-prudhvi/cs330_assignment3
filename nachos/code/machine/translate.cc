@@ -238,7 +238,16 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     unsigned int size = numPagesInVM * PageSize;
     unsigned int readLen = PageSize;
 
-    entry->physicalPage = numPagesAllocated;
+    // entry->physicalPage = numPagesAllocated;
+
+    int *physicalPageNumber = (int *)freePages->Remove();
+    if (physicalPageNumber == NULL) {
+      entry->physicalPage = numPagesAllocated;
+      numPagesAllocated += 1;
+    }
+    else {
+      entry->physicalPage = *physicalPageNumber;
+    }
     pageFrame = entry->physicalPage;
 
     bzero(&machine->mainMemory[pageFrame*PageSize], PageSize);
@@ -251,9 +260,9 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 
     entry->valid = TRUE;
     delete executable;
-    
 
-    numPagesAllocated += 1;
+
+    // numPagesAllocated += 1;
 
     currentThead->space->numValidPages += 1;
   }

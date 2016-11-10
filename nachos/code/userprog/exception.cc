@@ -55,6 +55,7 @@ static void ReadAvail(int arg) { readAvail->V(); }
 static void WriteDone(int arg) { writeDone->V(); }
 
 extern void StartUserProcess (char*);
+extern void BeginExec(char*);
 
 void
 ForkStartFunction (int dummy)
@@ -129,7 +130,7 @@ ExceptionHandler(ExceptionType which)
           machine->ReadMem(vaddr, 1, &memval);
        }
        buffer[i] = (*(char*)&memval);
-       StartUserProcess(buffer);
+       BeginExec(buffer);
     }
     else if ((which == SyscallException) && (type == SYScall_Join)) {
        waitpid = machine->ReadRegister(4);
