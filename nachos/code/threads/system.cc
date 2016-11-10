@@ -30,6 +30,7 @@ TimeSortedWaitQueue *sleepQueueHead;	// Needed to implement system_call_Sleep
 
 int schedulingAlgo;			// Scheduling algorithm to simulate
 int pageAlgo;
+List *pageList;
 char **batchProcesses;			// Names of batch processes
 int *priority;				// Process priority
 
@@ -56,6 +57,32 @@ PostOffice *postOffice;
 
 // External definition, to allow us to take a pointer to this function
 extern void Cleanup();
+
+
+
+
+
+void removepage(int data)
+{
+    List *newlist=new List();
+    int *temp=(int *)pageList->Remove();
+
+    while(temp != NULL)
+    {
+        if( *temp == data)
+        {
+            delete temp;
+        }
+        else
+        {
+            newlist->Append(void *(temp))
+        }
+        temp=(int *)pageList->Remove();
+    }
+
+    pageList=newlist;
+}
+
 
 
 //----------------------------------------------------------------------
@@ -119,6 +146,7 @@ Initialize(int argc, char **argv)
 
     schedulingAlgo = NON_PREEMPTIVE_BASE;	// Default
     pageAlgo=0; // normal demand paging
+    pageList = new List();
 
     batchProcesses = new char*[MAX_BATCH_SIZE];
     ASSERT(batchProcesses != NULL);

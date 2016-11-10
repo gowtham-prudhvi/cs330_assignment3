@@ -56,6 +56,7 @@ extern bool exitThreadArray[];		// Marks exited threads
 
 extern int schedulingAlgo;		// Scheduling algorithm to simulate
 extern int pageAlgo;
+extern List *pageList;
 extern char **batchProcesses;		// Names of batch executables
 extern int *priority;			// Process priority
 

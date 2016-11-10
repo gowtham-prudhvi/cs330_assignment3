@@ -18,6 +18,7 @@
 
 #define UserStackSize		1024 	// increase this as necessary!
 
+extern void removepage(int data);
 class ProcessAddrSpace {
   public:
     ProcessAddrSpace(OpenFile *executable);	// Create an address space,
