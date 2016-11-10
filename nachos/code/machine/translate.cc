@@ -240,10 +240,13 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 
     // entry->physicalPage = numPagesAllocated;
 
+    numPagesAllocated += 1;
+    ASSERT(NumPhysPages >= numPagesAllocated);
+
     int *physicalPageNumber = (int *)freePages->Remove();
     if (physicalPageNumber == NULL) {
-      entry->physicalPage = numPagesAllocated;
-      numPagesAllocated += 1;
+      entry->physicalPage = nextUnallocatedPage;
+      nextUnallocatedAllocated += 1;
     }
     else {
       entry->physicalPage = *physicalPageNumber;

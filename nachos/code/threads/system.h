@@ -41,6 +41,7 @@ extern void Initialize(int argc, char **argv); 	// Initialization,
 extern void Cleanup();				// Cleanup, called when
 						// Nachos is done.
 
+extern unsigned nextUnallocatedPage;
 extern NachOSThread *currentThread;			// the thread holding the CPU
 extern NachOSThread *threadToBeDestroyed;  		// the thread that just finished
 extern NachOSscheduler *scheduler;			// the ready list

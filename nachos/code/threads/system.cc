@@ -22,6 +22,7 @@ Timer *timer;				// the hardware timer device,
 List *ListOfFreedPages;
 
 
+unsigned nextUnallocatedPage;
 unsigned numPagesAllocated;              // number of physical frames allocated
 
 NachOSThread *threadArray[MAX_THREAD_COUNT];  // Array of thread pointers
@@ -116,6 +117,7 @@ Initialize(int argc, char **argv)
     char* debugArgs = "";
     bool randomYield = FALSE;
 
+    nextUnallocatedPage = 0;
     initializedConsoleSemaphores = false;
     numPagesAllocated = 0;
 
