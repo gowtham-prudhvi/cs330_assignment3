@@ -55,6 +55,7 @@ extern bool initializedConsoleSemaphores;	// Used to initialize the semaphores f
 extern bool exitThreadArray[];		// Marks exited threads
 
 extern int schedulingAlgo;		// Scheduling algorithm to simulate
+extern int pageAlgo;
 extern char **batchProcesses;		// Names of batch executables
 extern int *priority;			// Process priority
 

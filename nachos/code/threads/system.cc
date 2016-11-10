@@ -29,6 +29,7 @@ bool exitThreadArray[MAX_THREAD_COUNT];  //Marks exited threads
 TimeSortedWaitQueue *sleepQueueHead;	// Needed to implement system_call_Sleep
 
 int schedulingAlgo;			// Scheduling algorithm to simulate
+int pageAlgo;
 char **batchProcesses;			// Names of batch processes
 int *priority;				// Process priority
 
@@ -117,6 +118,7 @@ Initialize(int argc, char **argv)
     numPagesAllocated = 0;
 
     schedulingAlgo = NON_PREEMPTIVE_BASE;	// Default
+    pageAlgo=0; // normal demand paging
 
     batchProcesses = new char*[MAX_BATCH_SIZE];
     ASSERT(batchProcesses != NULL);
