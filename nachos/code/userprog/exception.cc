@@ -100,6 +100,7 @@ ExceptionHandler(ExceptionType which)
     NachOSThread *child;		// Used by SYScall_Fork
     unsigned sleeptime;		// Used by SYScall_Sleep
     unsigned shmStart;
+    int returnValue;
 
     if ((which == SyscallException) && (type == SYScall_Halt)) {
 	DEBUG('a', "Shutdown, initiated by user program.\n");
@@ -122,13 +123,18 @@ ExceptionHandler(ExceptionType which)
     else if ((which == SyscallException) && (type == SYScall_Exec)) {
        // Copy the executable name into kernel space
        vaddr = machine->ReadRegister(4);
-       machine->ReadMem(vaddr, 1, &memval);
+       returnValue = FALSE;
+       while (returnValue != TRUE) {
+        machine->ReadMem(vaddr, 1, &memval);
+       }
        i = 0;
        while ((*(char*)&memval) != '\0') {
           buffer[i] = (*(char*)&memval);
           i++;
           vaddr++;
-          machine->ReadMem(vaddr, 1, &memval);
+          while (returnValue != TRUE) {
+            machine->ReadMem(vaddr, 1, &memval);
+          }
        }
        buffer[i] = (*(char*)&memval);
        BeginExec(buffer);
@@ -216,12 +222,16 @@ ExceptionHandler(ExceptionType which)
     }
     else if ((which == SyscallException) && (type == SYScall_PrintString)) {
        vaddr = machine->ReadRegister(4);
-       machine->ReadMem(vaddr, 1, &memval);
+       while (returnValue != TRUE) {
+            machine->ReadMem(vaddr, 1, &memval);
+          }
        while ((*(char*)&memval) != '\0') {
           writeDone->P() ;
           console->PutChar(*(char*)&memval);
           vaddr++;
-          machine->ReadMem(vaddr, 1, &memval);
+          while (returnValue != TRUE) {
+            machine->ReadMem(vaddr, 1, &memval);
+          }
        }
        // Advance program counters.
        machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
@@ -319,6 +329,7 @@ ExceptionHandler(ExceptionType which)
        machine->WriteRegister(2, shmStart);
     } 
     else if (which == PageFaultException) {
+      currentThread->setStatus(BLOCKED);
       currentThread->SortedInsertInWaitQueue(1000 + stats->totalTicks);
       stats->numPageFaults += 1;
     }
