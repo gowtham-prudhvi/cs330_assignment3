@@ -99,6 +99,7 @@ ExceptionHandler(ExceptionType which)
     int whichChild;		// Used in SYScall_Join
     NachOSThread *child;		// Used by SYScall_Fork
     unsigned sleeptime;		// Used by SYScall_Sleep
+    unsigned shmStart;
 
     if ((which == SyscallException) && (type == SYScall_Halt)) {
 	DEBUG('a', "Shutdown, initiated by user program.\n");
@@ -306,9 +307,11 @@ ExceptionHandler(ExceptionType which)
 
 
       int shmSize=machine->ReadRegister(4);
+      int createdPages;
+      shmStart = (unsigned)currentThread->space->createSharedPageTable(shmSize, &createdPages);
+
        // Advance program counters.
 
-      unsigned shmStart= currentThread->space->createShmPage(shmSize);
        machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
        machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
        machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg)+4);
@@ -316,6 +319,7 @@ ExceptionHandler(ExceptionType which)
        machine->WriteRegister(2, shmStart);
     } 
     else if (which == PageFaultException) {
+      currentThread->SortedInsertInWaitQueue(1000 + stats->totalTicks);
       stats->numPageFaults += 1;
     }
     else {

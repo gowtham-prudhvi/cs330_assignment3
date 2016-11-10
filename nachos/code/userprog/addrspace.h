@@ -38,7 +38,7 @@ class ProcessAddrSpace {
     unsigned GetNumPages();
 
     TranslationEntry* GetPageTable();
-    unsigned createShmPage(int shmSize);
+    unsigned createShmPage(int shmSize, int *createdPages);
 
     int numSharedPages;
     int numValidPages;

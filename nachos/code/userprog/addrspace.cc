@@ -221,7 +221,7 @@ ProcessAddrSpace::~ProcessAddrSpace()
 
 
 unsigned
-ProcessAddrSpace::createShmPage(int shmSize)
+ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
 {
 
     unsigned prevnumPages = GetNumPages();
@@ -233,9 +233,11 @@ ProcessAddrSpace::createShmPage(int shmSize)
     }
 
     numSharedPages += extraPages;
+    *createdPages = extraPages;
 
-    //TODO: numPagesInVM = prevnumPages + extraPages;
-    unsigned numPagesInVM+=extraPages;
+
+    numPagesInVM = prevnumPages + extraPages;
+    // unsigned numPagesInVM+=extraPages;
     unsigned i;
 
     numPagesAllocated += extraPages;
