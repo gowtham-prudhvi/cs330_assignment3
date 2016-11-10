@@ -268,6 +268,7 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     // numPagesAllocated += 1;
 
     currentThead->space->numValidPages += 1;
+    return PageFaultException;
   }
     } else {
         for (entry = NULL, i = 0; i < TLBSize; i++)

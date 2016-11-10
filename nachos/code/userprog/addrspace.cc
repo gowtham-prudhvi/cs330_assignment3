@@ -149,6 +149,7 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
     numValidPages = parentSpace->numValidPages;
     unsigned i, j, size = numPagesInVM * PageSize;
 
+    noffH = parentSpace->noffH;
     strcpy(filename, parentSpace->filename);
 
     ASSERT(numValidPages-numSharedPages+numPagesAllocated <= NumPhysPages);                // check we're not trying
@@ -182,6 +183,7 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
             }
         }
         NachOSpageTable[i].valid = parentPageTable[i].valid;
+        NachOSpageTable[i].virtualPage = i;
         NachOSpageTable[i].use = parentPageTable[i].use;
         NachOSpageTable[i].dirty = parentPageTable[i].dirty;
         NachOSpageTable[i].readOnly = parentPageTable[i].readOnly;  

@@ -315,6 +315,9 @@ ExceptionHandler(ExceptionType which)
        
        machine->WriteRegister(2, shmStart);
     } 
+    else if (which == PageFaultException) {
+      stats->numPageFaults += 1;
+    }
     else {
 	printf("Unexpected user mode exception %d %d\n", which, type);
 	ASSERT(FALSE);
