@@ -33,6 +33,7 @@
 #include "machine.h"
 #include "addrspace.h"
 #include "system.h"
+#include "filesys.h"
 
 // Routines for converting Words and Short Words to and from the
 // simulated machine's format of little endian.  These end up
@@ -192,6 +193,8 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     unsigned int pageFrame;
 
     int flag = 0;
+    unsigned int numPagesInVM = currentThead->space->GetNumPages();
+
 
     DEBUG('a', "\tTranslate 0x%x, %s: ", virtAddr, writing ? "write" : "read");
 
@@ -216,7 +219,7 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 			virtAddr, NachOSpageTableSize);
 	    return AddressErrorException;
 	} else if (!NachOSpageTable[vpn].valid) {
-	    if (currentThead->space->validPages < currentThead->space->GetNumPages()) {
+	    if (currentThead->space->numValidPages < numPagesInVM) {
         flag = 1;
       }
       else {
@@ -229,28 +232,30 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 
   // code for demand paging
   if (flag) {
-    // handling of page faults
-    OpenFile *executable = currentThead->space->executable;
+    // open file
+    OpenFile *executable = fileSystem->Open(currentThead->space->filename);
     NoffHeader noffH = currentThead->space->noffH;
-    unsigned int numPagesInVM = currentThead->space->GetNumPages();
     unsigned int size = numPagesInVM * PageSize;
+    unsigned int readLen = PageSize;
 
     entry->physicalPage = numPagesAllocated;
     pageFrame = entry->physicalPage;
 
-    bzero(&machine->mainMemory[numPagesAllocated*PageSize], PageSize);
+    bzero(&machine->mainMemory[pageFrame*PageSize], PageSize);
   
     if (vpn == numPagesInVM - 1) {
-      executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize]),(size - vpn * PageSize), noffH.code.inFileAddr + vpn * PageSize);
-    }
-    else {
-      executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize]), PageSize, noffH.code.inFileAddr + vpn * PageSize);
+      readLen = size - vpn * PageSize;
     }
 
+    executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize]), readLen, noffH.code.inFileAddr + vpn * PageSize);
 
     entry->valid = TRUE;
+    delete executable;
     
+
     numPagesAllocated += 1;
+
+    currentThead->space->numValidPages += 1;
   }
     } else {
         for (entry = NULL, i = 0; i < TLBSize; i++)

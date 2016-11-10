@@ -57,11 +57,9 @@ SwapHeader (NoffHeader *noffH)
 //	"executable" is the file containing the object code to load into memory
 //----------------------------------------------------------------------
 
-ProcessAddrSpace::ProcessAddrSpace(OpenFile *prog)
+ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
 {
     // NoffHeader noffH;
-
-    executable = prog;
 
     unsigned int i, size;
     // unsigned vpn, offset;
@@ -150,6 +148,8 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
     numSharedPages = parentSpace->numSharedPages;
     numValidPages = parentSpace->numValidPages;
     unsigned i, j, size = numPagesInVM * PageSize;
+
+    strcpy(filename, parentSpace->filename);
 
     ASSERT(numValidPages-numSharedPages+numPagesAllocated <= NumPhysPages);                // check we're not trying
                                                                                 // to run anything too big --

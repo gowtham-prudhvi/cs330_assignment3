@@ -43,8 +43,7 @@ class ProcessAddrSpace {
     int numSharedPages;
     int numValidPages;
 
-    OpenFile *executable;
-    char *filename;
+    char filename[300];
     NoffHeader noffH;
 
   private:
