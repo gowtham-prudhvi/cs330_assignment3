@@ -97,8 +97,10 @@ NachOSThread::~NachOSThread()
     DEBUG('t', "Deleting thread \"%s\"\n", name);
 
     ASSERT(this != currentThread);
-    if (stack != NULL)
-	DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
+    if (stack != NULL) {
+	     DeallocBoundedArray((char *) stack, StackSize * sizeof(int));
+     }
+     delete pageCache;
 }
 
 //----------------------------------------------------------------------
@@ -713,4 +715,8 @@ int
 NachOSThread::GetUsage (void)
 {
    return usage;
+}
+
+void NachOSThread::initPageCache(int cacheSize) {
+  pageCache = new char[cacheSize];
 }

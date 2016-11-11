@@ -19,6 +19,10 @@ Statistics *stats;			// performance metrics
 Timer *timer;				// the hardware timer device,
 					// for invoking context switches
 
+List *ListOfFreedPages;
+
+TranslationEntry *pgEntries[NumPhysPages];
+unsigned nextUnallocatedPage;
 unsigned numPagesAllocated;              // number of physical frames allocated
 
 NachOSThread *threadArray[MAX_THREAD_COUNT];  // Array of thread pointers
@@ -33,6 +37,8 @@ int pageAlgo;
 List *pageList;
 char **batchProcesses;			// Names of batch processes
 int *priority;				// Process priority
+
+int pgReplaceAlgo;
 
 int cpu_burst_start_time;        // Records the start of current CPU burst
 int completionTimeArray[MAX_THREAD_COUNT];        // Records the completion time of all simulated threads
@@ -141,12 +147,26 @@ Initialize(int argc, char **argv)
     char* debugArgs = "";
     bool randomYield = FALSE;
 
+    nextUnallocatedPage = 0;
     initializedConsoleSemaphores = false;
     numPagesAllocated = 0;
 
+
+
+    ListOfFreedPages = new List();
+
+
+    // pgEntries = new TranslationEntry[NumPhysPages]
     schedulingAlgo = NON_PREEMPTIVE_BASE;	// Default
     pageAlgo=0; // normal demand paging
     pageList = new List();
+
+    // default
+    pgReplaceAlgo = NORMAL;
+
+    for (i = 0; i < NumPhysPages; i++) {
+        pgEntries[i] = NULL;
+    }
 
     batchProcesses = new char*[MAX_BATCH_SIZE];
     ASSERT(batchProcesses != NULL);

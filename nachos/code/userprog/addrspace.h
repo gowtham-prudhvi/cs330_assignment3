@@ -15,6 +15,7 @@
 
 #include "copyright.h"
 #include "filesys.h"
+#include "noff.h"
 
 #define UserStackSize		1024 	// increase this as necessary!
 
@@ -34,11 +35,17 @@ class ProcessAddrSpace {
 
     void SaveStateOnSwitch();			// Save/restore address space-specific
     void RestoreStateOnSwitch();		// info on a context switch
-
+    void freePages();
     unsigned GetNumPages();
 
     TranslationEntry* GetPageTable();
-    unsigned createShmPage(int shmSize);
+    unsigned createShmPage(int shmSize, int *createdPages);
+
+    int numSharedPages;
+    int numValidPages;
+
+    char filename[300];
+    NoffHeader noffH;
 
   private:
     TranslationEntry *NachOSpageTable;	// Assume linear page table translation

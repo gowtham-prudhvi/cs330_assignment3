@@ -35,12 +35,21 @@
 #define DEFAULT_BASE_PRIORITY	50		// Default base priority (used by UNIX scheduler)
 #define GET_NICE_FROM_PARENT	-1
 
+#define NORMAL 0
+#define FIFO 1
+#define LRU 2
+#define RANDOM 3
+#define LRU_CLOCK 4
+
 // Initialization and cleanup routines
 extern void Initialize(int argc, char **argv); 	// Initialization,
 						// called before anything else
 extern void Cleanup();				// Cleanup, called when
 						// Nachos is done.
 
+extern TranslationEntry *pgEntries[NumPhysPages];
+extern int pgReplaceAlgo;
+extern unsigned nextUnallocatedPage;
 extern NachOSThread *currentThread;			// the thread holding the CPU
 extern NachOSThread *threadToBeDestroyed;  		// the thread that just finished
 extern NachOSscheduler *scheduler;			// the ready list
@@ -63,6 +72,8 @@ extern int *priority;			// Process priority
 extern int cpu_burst_start_time;	// Records the start of current CPU burst
 extern int completionTimeArray[];	// Records the completion time of all simulated threads
 extern bool excludeMainThread;		// Used by completion time statistics calculation
+
+extern List *ListOfFreedPages;
 
 class TimeSortedWaitQueue {		// Needed to implement system_call_Sleep
 private:

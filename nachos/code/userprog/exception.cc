@@ -55,6 +55,7 @@ static void ReadAvail(int arg) { readAvail->V(); }
 static void WriteDone(int arg) { writeDone->V(); }
 
 extern void StartUserProcess (char*);
+extern void BeginExec(char*);
 
 void
 ForkStartFunction (int dummy)
@@ -98,6 +99,8 @@ ExceptionHandler(ExceptionType which)
     int whichChild;		// Used in SYScall_Join
     NachOSThread *child;		// Used by SYScall_Fork
     unsigned sleeptime;		// Used by SYScall_Sleep
+    unsigned shmStart;
+    int returnValue;
 
     if ((which == SyscallException) && (type == SYScall_Halt)) {
 	DEBUG('a', "Shutdown, initiated by user program.\n");
@@ -120,16 +123,21 @@ ExceptionHandler(ExceptionType which)
     else if ((which == SyscallException) && (type == SYScall_Exec)) {
        // Copy the executable name into kernel space
        vaddr = machine->ReadRegister(4);
-       machine->ReadMem(vaddr, 1, &memval);
+       returnValue = FALSE;
+       while (returnValue != TRUE) {
+        machine->ReadMem(vaddr, 1, &memval);
+       }
        i = 0;
        while ((*(char*)&memval) != '\0') {
           buffer[i] = (*(char*)&memval);
           i++;
           vaddr++;
-          machine->ReadMem(vaddr, 1, &memval);
+          while (returnValue != TRUE) {
+            machine->ReadMem(vaddr, 1, &memval);
+          }
        }
        buffer[i] = (*(char*)&memval);
-       StartUserProcess(buffer);
+       BeginExec(buffer);
     }
     else if ((which == SyscallException) && (type == SYScall_Join)) {
        waitpid = machine->ReadRegister(4);
@@ -160,6 +168,7 @@ ExceptionHandler(ExceptionType which)
        
        child = new NachOSThread("Forked thread", GET_NICE_FROM_PARENT);
        child->space = new ProcessAddrSpace (currentThread->space);  // Duplicates the address space
+       child->initPageCache(child->space->GetNumPages() * PageSize);
        child->SaveUserState ();		     		      // Duplicate the register set
        child->ResetReturnValue ();			     // Sets the return register to zero
        child->AllocateThreadStack (ForkStartFunction, 0);	// Make it ready for a later context switch
@@ -214,12 +223,16 @@ ExceptionHandler(ExceptionType which)
     }
     else if ((which == SyscallException) && (type == SYScall_PrintString)) {
        vaddr = machine->ReadRegister(4);
-       machine->ReadMem(vaddr, 1, &memval);
+       while (returnValue != TRUE) {
+            machine->ReadMem(vaddr, 1, &memval);
+          }
        while ((*(char*)&memval) != '\0') {
           writeDone->P() ;
           console->PutChar(*(char*)&memval);
           vaddr++;
-          machine->ReadMem(vaddr, 1, &memval);
+          while (returnValue != TRUE) {
+            machine->ReadMem(vaddr, 1, &memval);
+          }
        }
        // Advance program counters.
        machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
@@ -305,15 +318,22 @@ ExceptionHandler(ExceptionType which)
 
 
       int shmSize=machine->ReadRegister(4);
+      int createdPages;
+      shmStart = (unsigned)currentThread->space->createSharedPageTable(shmSize, &createdPages);
+
        // Advance program counters.
 
-      unsigned shmStart= currentThread->space->createShmPage(shmSize);
        machine->WriteRegister(PrevPCReg, machine->ReadRegister(PCReg));
        machine->WriteRegister(PCReg, machine->ReadRegister(NextPCReg));
        machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg)+4);
        
        machine->WriteRegister(2, shmStart);
     } 
+    else if (which == PageFaultException) {
+      currentThread->setStatus(BLOCKED);
+      currentThread->SortedInsertInWaitQueue(1000 + stats->totalTicks);
+      stats->numPageFaults += 1;
+    }
     else {
 	printf("Unexpected user mode exception %d %d\n", which, type);
 	ASSERT(FALSE);
