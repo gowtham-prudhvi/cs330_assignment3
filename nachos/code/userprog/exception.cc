@@ -168,6 +168,7 @@ ExceptionHandler(ExceptionType which)
        
        child = new NachOSThread("Forked thread", GET_NICE_FROM_PARENT);
        child->space = new ProcessAddrSpace (currentThread->space);  // Duplicates the address space
+       child->initPageCache(child->space->GetNumPages() * PageSize);
        child->SaveUserState ();		     		      // Duplicate the register set
        child->ResetReturnValue ();			     // Sets the return register to zero
        child->AllocateThreadStack (ForkStartFunction, 0);	// Make it ready for a later context switch

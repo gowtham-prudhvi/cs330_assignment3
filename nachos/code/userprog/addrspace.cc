@@ -99,11 +99,12 @@ ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
       // if the code segment was entirely on 
 					// a separate page, we could set its 
 					// pages to be read-only
-    NachOSpageTable[i].shared = FALSE;
+    NachOSpageTable[i].cached = FALSE;
     }
 
     numSharedPages = 0;
     numValidPages = 0;
+    currentThread->initPageCache(numPagesInVM * PageSize);
     /*
 // zero out the entire address space, to zero the unitialized data segment 
 // and the stack segment
@@ -188,7 +189,8 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
         NachOSpageTable[i].dirty = parentPageTable[i].dirty;
         NachOSpageTable[i].readOnly = parentPageTable[i].readOnly;  
         NachOSpageTable[i].shared = parentPageTable[i].shared;
-        	// if the code segment was entirely on
+        NachOSpageTable[i].cached = FALSE;
+            // if the code segment was entirely on
                                         			// a separate page, we could set its
                                         			// pages to be read-only
     }
@@ -257,17 +259,12 @@ ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
         NachOSpageTable[i].use = prevPageTable[i].use;
         NachOSpageTable[i].dirty = prevPageTable[i].dirty;
         NachOSpageTable[i].readOnly = prevPageTable[i].readOnly; // if the code segment was entirely on
-         NachOSpageTable[i].shared = prevPageTable[i].shared;                                             // a separate page, we could set its
-                                                    // pages to be read-only
+        NachOSpageTable[i].shared = prevPageTable[i].shared;                                             // a separate page, we could set its
+        NachOSpageTable[i].cached = prevPageTable[i].cached;                                           // pages to be read-only
     }
 
     for (i = prevnumPages; i < numPagesInVM; i++) {
         NachOSpageTable[i].virtualPage = i;
-        NachOSpageTable[i].valid = TRUE;
-        NachOSpageTable[i].use = FALSE;
-        NachOSpageTable[i].dirty = FALSE;
-        NachOSpageTable[i].readOnly = FALSE; 
-        NachOSpageTable[i].shared=TRUE;
 
         int *physicalPageNum = (int *)ListOfFreedPages->Remove();
         if (physicalPageNum == NULL) {
@@ -278,6 +275,12 @@ ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
         else {
             NachOSpageTable[i].physicalPage = *physicalPageNum;
         }
+        NachOSpageTable[i].valid = TRUE;
+        NachOSpageTable[i].use = FALSE;
+        NachOSpageTable[i].dirty = FALSE;
+        NachOSpageTable[i].readOnly = FALSE; 
+        NachOSpageTable[i].shared=TRUE;
+        NachOSpageTable[i].cached = FALSE;
     }
 
     

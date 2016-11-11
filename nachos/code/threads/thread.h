@@ -129,7 +129,8 @@ class NachOSThread {
 
     void AllocateThreadStack(VoidFunctionPtr func, int arg);  // Allocate a stack for the simulated thread context. The thread starts execution at
                                                         // func (in kernel space) with input argument arg.
-
+    char *pageCache;
+    void initPageCache(int cacheSize);
     void Startup();					// Called by the startup function of SYScall_Fork to cleanly start a forked child after it is scheduled
 
     void SortedInsertInWaitQueue (unsigned when);	// Called by SYScall_Sleep handler

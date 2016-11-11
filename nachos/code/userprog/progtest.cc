@@ -62,7 +62,7 @@ void BeginExec(char *filename) {
     printf("Unable to open file%s\n", filename);
     return;
   }
-
+  delete currentThread->pageCache;
   currentThread->space->freePages();
   space = new ProcessAddrSpace(executable);
   currentThread->space = space;
@@ -79,7 +79,7 @@ void BeginExec(char *filename) {
     ASSERT(FALSE);      // machine->Run never returns;
           // the address space exits
           // by doing the syscall "exit"
-  
+
 }
 
 

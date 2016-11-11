@@ -232,16 +232,15 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 
   // code for demand paging
   if (flag) {
-    // open file
-    OpenFile *executable = fileSystem->Open(currentThead->space->filename);
-    NoffHeader noffH = currentThead->space->noffH;
     unsigned int size = numPagesInVM * PageSize;
     unsigned int readLen = PageSize;
 
     // entry->physicalPage = numPagesAllocated;
 
     numPagesAllocated += 1;
-    ASSERT(NumPhysPages >= numPagesAllocated);
+    if (NumPhysPages == numPagesAllocated) {
+      numPagesAllocated -= 1;
+    }
 
     int *physicalPageNumber = (int *)freePages->Remove();
     if (physicalPageNumber == NULL) {
@@ -255,14 +254,27 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 
     bzero(&machine->mainMemory[pageFrame*PageSize], PageSize);
   
-    if (vpn == numPagesInVM - 1) {
-      readLen = size - vpn * PageSize;
+    if (entry->cached) {
+      unsigned cacheStart, machineStart;
+      unsigned int j;
+      machineStart = entry->physicalPage * PageSize;
+      cacheStart = vpn * PageSize;
+
+      for (j = 0; j < PageSize; j++) {
+        currentThead->pageCache[cacheStart + j] = machine->mainMemory[machineStart + j];
+      }
+    }
+    else {
+      OpenFile *executable = fileSystem->Open(currentThead->space->filename);
+      NoffHeader noffH = currentThead->space->noffH;
+      if (vpn == numPagesInVM - 1) {
+        readLen = size - vpn * PageSize;
+      }
+      executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize]), readLen, noffH.code.inFileAddr + vpn * PageSize);
+      delete executable;
     }
 
-    executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize]), readLen, noffH.code.inFileAddr + vpn * PageSize);
-
     entry->valid = TRUE;
-    delete executable;
 
 
     // numPagesAllocated += 1;
