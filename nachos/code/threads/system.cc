@@ -66,8 +66,56 @@ extern void Cleanup();
 
 
 int * getPageLRU()
-{
-    
+{   int * page;
+    List *tempList=new List();
+    List *operateList=new List();
+
+    int *temp=(int *)pageList->Remove();
+
+    while(temp != NULL)
+    {   
+        int *temp1=new int(*temp); //new pointer so old list doesnt gett deleted when we 
+                                    //operate on this list
+
+        tempList->Append((void *)temp);
+        operateList->Append((void *)temp1);
+        temp=(int *)pageList->Remove();
+    }
+
+    delete pageList;
+
+    pageList=tempList;
+
+    temp=(int *)operateList->Remove();
+
+    while(*(temp) != *(clockHand))
+    {
+        operateList->Append((void *)temp);
+        temp=(int *)operateList->Remove();
+    }
+
+    while(referenceBit[*(temp)] != FALSE)
+    {   referenceBit[*temp]=FALSE;
+        operateList->Append((void *)temp);
+        temp=(int *)operateList->Remove();
+    }
+
+    if (referenceBit[*temp]==FALSE)
+    {
+        page= new int(*temp);
+        temp=operateList->Remove();
+        *clockHand=*temp;
+        operateList->Append((void *)temp);
+        temp=operateList->Remove();
+    }
+    while(temp!=NULL)
+    {
+        delete temp;
+        temp=operateList->Remove();
+
+    }
+    delete operateList;
+    return page;
 }
 
 

@@ -248,7 +248,8 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
               oldPageFrame=(int *)(pageList->Remove());
       }
       else if (pgReplaceAlgo == LRU_CLOCK) {
-              oldPageFrame=
+              oldPageFrame=getPageLRU();
+
       }
       else if (pgReplaceAlgo == RANDOM){
 
@@ -307,6 +308,11 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
   {
     int * temp=new int(pageFrame);
     pageList->Append(void *(temp)); 
+
+    if (stats->NumPageFaults==0)
+    {
+      clockHand=new int(*temp);
+    }
   }
 
 
