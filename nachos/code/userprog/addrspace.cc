@@ -62,6 +62,8 @@ ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
     // NoffHeader noffH;
 
     unsigned int i, size;
+
+    int pid=currentThread->GetPID();
     // unsigned vpn, offset;
     // TranslationEntry *entry;
     // unsigned int pageFrame;
@@ -100,6 +102,7 @@ ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
 					// a separate page, we could set its 
 					// pages to be read-only
     NachOSpageTable[i].cached = FALSE;
+    NachOSpageTable[i].pid=pid;
     }
 
     numSharedPages = 0;
@@ -143,13 +146,12 @@ ProcessAddrSpace::ProcessAddrSpace(OpenFile *executable)
 //      We need to duplicate the address space of the parent.
 //----------------------------------------------------------------------
 
-ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
+ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace,int pid)
 {
     numPagesInVM = parentSpace->GetNumPages();
     numSharedPages = parentSpace->numSharedPages;
     numValidPages = parentSpace->numValidPages;
     unsigned i, j, size = numPagesInVM * PageSize;
-
     noffH = parentSpace->noffH;
     strcpy(filename, parentSpace->filename);
 
@@ -177,6 +179,7 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
                 }
                 else {
                     NachOSpageTable[i].physicalPage = *physicalPageNum;
+                    delete physicalPageNum;
                 }
                 pgEntries[NachOSpageTable[i].physicalPage] = &NachOSpageTable[i];
             }
@@ -191,6 +194,7 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
         NachOSpageTable[i].readOnly = parentPageTable[i].readOnly;  
         NachOSpageTable[i].shared = parentPageTable[i].shared;
         NachOSpageTable[i].cached = FALSE;
+        NachOSpageTable[i].pid=pid;
             // if the code segment was entirely on
                                         			// a separate page, we could set its
                                         			// pages to be read-only
@@ -235,6 +239,7 @@ ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
 
     unsigned prevnumPages = GetNumPages();
     TranslationEntry* prevPageTable=GetPageTable();
+    int pid=currentThread->GetPID();
     unsigned extraPages=shmSize/PageSize;
     if (shmSize%PageSize)
     {
@@ -261,13 +266,14 @@ ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
     NachOSpageTable = new TranslationEntry[numPagesInVM];
     for (i = 0; i < prevnumPages; i++) {
         NachOSpageTable[i].virtualPage = i;
-        NachOSpageTable[i].physicalPage = parentPageTable[i].physicalPage;
+        NachOSpageTable[i].physicalPage = prevPageTable[i].physicalPage;
         NachOSpageTable[i].valid = prevPageTable[i].valid;
         NachOSpageTable[i].use = prevPageTable[i].use;
         NachOSpageTable[i].dirty = prevPageTable[i].dirty;
         NachOSpageTable[i].readOnly = prevPageTable[i].readOnly; // if the code segment was entirely on
         NachOSpageTable[i].shared = prevPageTable[i].shared;                                             // a separate page, we could set its
-        NachOSpageTable[i].cached = prevPageTable[i].cached; 
+        NachOSpageTable[i].cached = prevPageTable[i].cached;
+        NachOSpageTable[i].pid = prevPageTable[i].pid; 
         pgEntries[NachOSpageTable[i].physicalPage] = &NachOSpageTable[i];                                          // pages to be read-only
     }
 
@@ -282,6 +288,7 @@ ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
         }
         else {
             NachOSpageTable[i].physicalPage = *physicalPageNum;
+            delete physicalPageNum;
         }
 
         pgEntries[NachOSpageTable[i].physicalPage] = &NachOSpageTable[i];
@@ -292,6 +299,7 @@ ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
         NachOSpageTable[i].readOnly = FALSE; 
         NachOSpageTable[i].shared=TRUE;
         NachOSpageTable[i].cached = FALSE;
+        NachOSpageTable[i].pid=pid;
     }
 
     

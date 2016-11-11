@@ -33,7 +33,6 @@ bool exitThreadArray[MAX_THREAD_COUNT];  //Marks exited threads
 TimeSortedWaitQueue *sleepQueueHead;	// Needed to implement system_call_Sleep
 
 int schedulingAlgo;			// Scheduling algorithm to simulate
-int pageAlgo;
 List *pageList;
 char **batchProcesses;			// Names of batch processes
 int *priority;				// Process priority
@@ -81,7 +80,7 @@ void removepage(int data)
         }
         else
         {
-            newlist->Append(void *(temp))
+            newlist->Append((void *)temp);
         }
         temp=(int *)pageList->Remove();
     }
@@ -158,11 +157,11 @@ Initialize(int argc, char **argv)
 
     // pgEntries = new TranslationEntry[NumPhysPages]
     schedulingAlgo = NON_PREEMPTIVE_BASE;	// Default
-    pageAlgo=0; // normal demand paging
+    //pageAlgo=0; // normal demand paging
     pageList = new List();
 
     // default
-    pgReplaceAlgo = NORMAL;
+    pgReplaceAlgo = NORMAL; 
 
     for (i = 0; i < NumPhysPages; i++) {
         pgEntries[i] = NULL;

@@ -167,7 +167,7 @@ ExceptionHandler(ExceptionType which)
        machine->WriteRegister(NextPCReg, machine->ReadRegister(NextPCReg)+4);
        
        child = new NachOSThread("Forked thread", GET_NICE_FROM_PARENT);
-       child->space = new ProcessAddrSpace (currentThread->space);  // Duplicates the address space
+       child->space = new ProcessAddrSpace (currentThread->space,child->GetPID());  // Duplicates the address space
        child->initPageCache(child->space->GetNumPages() * PageSize);
        child->SaveUserState ();		     		      // Duplicate the register set
        child->ResetReturnValue ();			     // Sets the return register to zero
@@ -330,7 +330,7 @@ ExceptionHandler(ExceptionType which)
        machine->WriteRegister(2, shmStart);
     } 
     else if (which == PageFaultException) {
-      currentThread->setStatus(BLOCKED);
+      //currentThread->setStatus(BLOCKED);
       currentThread->SortedInsertInWaitQueue(1000 + stats->totalTicks);
       stats->numPageFaults += 1;
     }

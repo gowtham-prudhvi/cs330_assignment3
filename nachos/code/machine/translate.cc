@@ -29,6 +29,7 @@
 // All rights reserved.  See copyright.h for copyright notice and limitation 
 // of liability and disclaimer of warranty provisions.
 
+#include <stdlib.h>
 #include "copyright.h"
 #include "machine.h"
 #include "addrspace.h"
@@ -241,19 +242,44 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     if (NumPhysPages == numPagesAllocated) {
       numPagesAllocated -= 1;
 
-      int newPage;
-      if (pgReplaceAlgo == FIFO) {
-      }
-      else if (pgReplaceAlgo == LRU) {
+      int *oldPageFrame;
+      TranslationEntry * oldframeEntry;
+      if (pgReplaceAlgo == FIFO || pgReplaceAlgo==LRU) {
+              oldPageFrame=(int *)(pageList->Remove());
       }
       else if (pgReplaceAlgo == LRU_CLOCK) {
       }
       else if (pgReplaceAlgo == RANDOM){
+
+          oldPageFrame=new int(rand()%(NumPhysPages-1));
       }
       else {
       }
-    }
 
+      oldframeEntry=pgEntries[*oldPageFrame];
+      NachOSThread * thread=threadArray[oldframeEntry->pid];
+
+      delete oldPageFrame;
+
+      oldframeEntry->valid = FALSE;
+      thread->space->numValidPages--;
+
+      if (oldframeEntry->dirty)
+      {
+        unsigned machineStart,backupStart;
+        machineStart=(oldframeEntry->physicalPage)*PageSize;
+        backupStart=(oldframeEntry->virtualPage)*PageSize;
+        oldframeEntry->cached = TRUE;
+        int j;
+        for (j = 0; j < PageSize; j++) {
+        thread->pageCache[backupStart + j] = machine->mainMemory[machineStart + j];
+      }
+ 
+
+      }
+    }
+    else
+    {
     int *physicalPageNumber = (int *)freePages->Remove();
     if (physicalPageNumber == NULL) {
       entry->physicalPage = nextUnallocatedPage;
@@ -262,6 +288,7 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     else {
       entry->physicalPage = *physicalPageNumber;
     }
+  }
     pageFrame = entry->physicalPage;
 
     bzero(&machine->mainMemory[pageFrame*PageSize], PageSize);
@@ -293,7 +320,7 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     pgEntries[entry->physicalPage] = entry;
     currentThead->space->numValidPages += 1;
     return PageFaultException;
-  }
+    }
     } else {
         for (entry = NULL, i = 0; i < TLBSize; i++)
     	    if (tlb[i].valid && (tlb[i].virtualPage == vpn)) {

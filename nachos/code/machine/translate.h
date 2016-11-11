@@ -42,6 +42,7 @@ class TranslationEntry {
 			// page is modified.
     bool shared;
     bool cached;
+    int pid;
 };
 
 #endif
