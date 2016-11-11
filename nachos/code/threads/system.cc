@@ -36,6 +36,8 @@ int schedulingAlgo;			// Scheduling algorithm to simulate
 char **batchProcesses;			// Names of batch processes
 int *priority;				// Process priority
 
+int pgReplaceAlgo;
+
 int cpu_burst_start_time;        // Records the start of current CPU burst
 int completionTimeArray[MAX_THREAD_COUNT];        // Records the completion time of all simulated threads
 bool excludeMainThread;		// Used by completion time statistics calculation
@@ -127,6 +129,8 @@ Initialize(int argc, char **argv)
 
     schedulingAlgo = NON_PREEMPTIVE_BASE;	// Default
 
+    // default
+    pgReplaceAlgo = NORMAL;
     batchProcesses = new char*[MAX_BATCH_SIZE];
     ASSERT(batchProcesses != NULL);
     for (i=0; i<MAX_BATCH_SIZE; i++) {
