@@ -391,6 +391,8 @@ void ProcessAddrSpace::freePages() {
             ListOfFreedPages->Append((void *)temp);
             count += 1;
             pgEntries[NachOSpageTable[i].physicalPage] = NULL;
+
+            removepage(NachOSpageTable[i].physicalPage);
         }
 
         i += 1;

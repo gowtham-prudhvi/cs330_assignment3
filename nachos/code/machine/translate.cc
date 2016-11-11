@@ -277,9 +277,11 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
  
 
       }
+        entry->physicalPage=oldframeEntry->physicalPage;
     }
     else
     {
+      numPagesAllocated++;
     int *physicalPageNumber = (int *)freePages->Remove();
     if (physicalPageNumber == NULL) {
       entry->physicalPage = nextUnallocatedPage;
@@ -287,9 +289,20 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     }
     else {
       entry->physicalPage = *physicalPageNumber;
+      delete physicalPageNumber;
     }
   }
+
+    pgEntries[entry->physicalPage]=entry;
     pageFrame = entry->physicalPage;
+
+
+  if(pgReplaceAlgo == FIFO)
+  {
+    int * temp=new int(pageFrame);
+    pageList->Append(void *(temp));
+  }
+
 
     bzero(&machine->mainMemory[pageFrame*PageSize], PageSize);
   
@@ -300,7 +313,7 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
       cacheStart = vpn * PageSize;
 
       for (j = 0; j < PageSize; j++) {
-        currentThead->pageCache[cacheStart + j] = machine->mainMemory[machineStart + j];
+        machine->mainMemory[machineStart + j]=currentThead->pageCache[cacheStart + j] ;
       }
     }
     else {
@@ -353,6 +366,16 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     *physAddr = pageFrame * PageSize + offset;
     ASSERT((*physAddr >= 0) && ((*physAddr + size) <= MemorySize));
     DEBUG('a', "phys addr = 0x%x\n", *physAddr);
+
+
+    if (pgReplaceAlgo == LRU)
+
+    {
+      removepage(pageFrame);
+      int *temp=new int(pageFrame);
+      pageList->Append(void *(temp));
+      /* code */
+    }
     return NoException;
 }
 

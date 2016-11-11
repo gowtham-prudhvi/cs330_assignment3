@@ -269,6 +269,8 @@ NachOSThread::Exit (bool terminateSim, int exitcode)
           threadArray[ppid]->SetChildExitCode (pid, exitcode);
        }
     }
+    currentThread->space->freePages();
+
 
     nextThread = scheduler->FindNextThreadToRun();
     if (nextThread == NULL) {
