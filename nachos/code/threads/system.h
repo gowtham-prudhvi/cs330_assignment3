@@ -48,30 +48,32 @@ extern void Cleanup();				// Cleanup, called when
 						// Nachos is done.
 
 extern TranslationEntry *pgEntries[NumPhysPages];
+extern bool referenceBit[NumPhysPages];
+extern int *getPageLRU();
+extern int *clockHand;
 extern int pgReplaceAlgo;
 extern unsigned nextUnallocatedPage;
-extern NachOSThread *currentThread;			// the thread holding the CPU
-extern NachOSThread *threadToBeDestroyed;  		// the thread that just finished
-extern NachOSscheduler *scheduler;			// the ready list
-extern Interrupt *interrupt;			// interrupt status
-extern Statistics *stats;			// performance metrics
-extern Timer *timer;				// the hardware alarm clock
-extern unsigned numPagesAllocated;		// number of physical frames allocated
+extern NachOSThread *currentThread;       // the thread holding the CPU
+extern NachOSThread *threadToBeDestroyed;       // the thread that just finished
+extern NachOSscheduler *scheduler;        // the ready list
+extern Interrupt *interrupt;        // interrupt status
+extern Statistics *stats;        // performance metrics
+extern Timer *timer;          // the hardware alarm clock
+extern unsigned numPagesAllocated;     // number of physical frames allocated
 
 extern NachOSThread *threadArray[];  // Array of thread pointers
 extern unsigned thread_index;                  // Index into this array (also used to assign unique pid)
-extern bool initializedConsoleSemaphores;	// Used to initialize the semaphores for console I/O exactly once
-extern bool exitThreadArray[];		// Marks exited threads
+extern bool initializedConsoleSemaphores; // Used to initialize the semaphores for console I/O exactly once
+extern bool exitThreadArray[];      // Marks exited threads
 
-extern int schedulingAlgo;		// Scheduling algorithm to simulate
+extern int schedulingAlgo;    // Scheduling algorithm to simulate
 extern List *pageList;
-extern char **batchProcesses;		// Names of batch executables
-extern int *priority;			// Process priority
+extern char **batchProcesses;    // Names of batch executables
+extern int *priority;         // Process priority
 
-extern int cpu_burst_start_time;	// Records the start of current CPU burst
-extern int completionTimeArray[];	// Records the completion time of all simulated threads
-extern bool excludeMainThread;		// Used by completion time statistics calculation
-
+extern int cpu_burst_start_time; // Records the start of current CPU burst
+extern int completionTimeArray[];   // Records the completion time of all simulated threads
+extern bool excludeMainThread;      // Used by completion time statistics calculation
 extern List *ListOfFreedPages;
 
 class TimeSortedWaitQueue {		// Needed to implement system_call_Sleep

@@ -22,6 +22,7 @@ Timer *timer;				// the hardware timer device,
 List *ListOfFreedPages;
 
 TranslationEntry *pgEntries[NumPhysPages];
+bool referenceBit[NumPhysPages];
 unsigned nextUnallocatedPage;
 unsigned numPagesAllocated;              // number of physical frames allocated
 
@@ -64,7 +65,10 @@ PostOffice *postOffice;
 extern void Cleanup();
 
 
-
+int * getPageLRU()
+{
+    
+}
 
 
 void removepage(int data)
@@ -84,6 +88,8 @@ void removepage(int data)
         }
         temp=(int *)pageList->Remove();
     }
+
+    delete pageList;
 
     pageList=newlist;
 }
@@ -165,6 +171,7 @@ Initialize(int argc, char **argv)
 
     for (i = 0; i < NumPhysPages; i++) {
         pgEntries[i] = NULL;
+        referenceBit[i]=FALSE;//DEFAULT REFERENCT BIT IS NOT SET
     }
 
     batchProcesses = new char*[MAX_BATCH_SIZE];

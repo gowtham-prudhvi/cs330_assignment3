@@ -248,6 +248,7 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
               oldPageFrame=(int *)(pageList->Remove());
       }
       else if (pgReplaceAlgo == LRU_CLOCK) {
+              oldPageFrame=
       }
       else if (pgReplaceAlgo == RANDOM){
 
@@ -301,6 +302,11 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
   {
     int * temp=new int(pageFrame);
     pageList->Append(void *(temp));
+  }
+  else if(pgReplaceAlgo == LRU_CLOCK)
+  {
+    int * temp=new int(pageFrame);
+    pageList->Append(void *(temp)); 
   }
 
 
@@ -375,6 +381,10 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
       int *temp=new int(pageFrame);
       pageList->Append(void *(temp));
       /* code */
+    }
+    else if (pgReplaceAlgo == LRU_CLOCK)
+    {
+        referenceBit[pageFrame]=TRUE;//SET REF BIT TO TRUE
     }
     return NoException;
 }
