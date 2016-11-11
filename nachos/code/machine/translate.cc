@@ -33,6 +33,7 @@
 #include "machine.h"
 #include "addrspace.h"
 #include "system.h"
+#include "filesys.h"
 
 // Routines for converting Words and Short Words to and from the
 // simulated machine's format of little endian.  These end up
@@ -191,6 +192,10 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     TranslationEntry *entry;
     unsigned int pageFrame;
 
+    int flag = 0;
+    unsigned int numPagesInVM = currentThead->space->GetNumPages();
+
+
     DEBUG('a', "\tTranslate 0x%x, %s: ", virtAddr, writing ? "write" : "read");
 
 // check for alignment errors
@@ -214,11 +219,81 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 			virtAddr, NachOSpageTableSize);
 	    return AddressErrorException;
 	} else if (!NachOSpageTable[vpn].valid) {
-	    DEBUG('a', "virtual page # %d too large for page table size %d!\n", 
-			virtAddr, NachOSpageTableSize);
-	    return PageFaultException;
+	    if (currentThead->space->numValidPages < numPagesInVM) {
+        flag = 1;
+      }
+      else {
+        DEBUG('a', "virtual page # %d too large for page table size %d!\n", 
+          virtAddr, NachOSpageTableSize);
+        return PageFaultException;
+      }
 	}
 	entry = &NachOSpageTable[vpn];
+
+  // code for demand paging
+  if (flag) {
+    unsigned int size = numPagesInVM * PageSize;
+    unsigned int readLen = PageSize;
+
+    // entry->physicalPage = numPagesAllocated;
+
+    numPagesAllocated += 1;
+    if (NumPhysPages == numPagesAllocated) {
+      numPagesAllocated -= 1;
+
+      int newPage;
+      if (pgReplaceAlgo == FIFO) {
+      }
+      else if (pgReplaceAlgo == LRU) {
+      }
+      else if (pgReplaceAlgo == LRU_CLOCK) {
+      }
+      else if (pgReplaceAlgo == RANDOM){
+      }
+      else {
+      }
+    }
+
+    int *physicalPageNumber = (int *)freePages->Remove();
+    if (physicalPageNumber == NULL) {
+      entry->physicalPage = nextUnallocatedPage;
+      nextUnallocatedAllocated += 1;
+    }
+    else {
+      entry->physicalPage = *physicalPageNumber;
+    }
+    pageFrame = entry->physicalPage;
+
+    bzero(&machine->mainMemory[pageFrame*PageSize], PageSize);
+  
+    if (entry->cached) {
+      unsigned cacheStart, machineStart;
+      unsigned int j;
+      machineStart = entry->physicalPage * PageSize;
+      cacheStart = vpn * PageSize;
+
+      for (j = 0; j < PageSize; j++) {
+        currentThead->pageCache[cacheStart + j] = machine->mainMemory[machineStart + j];
+      }
+    }
+    else {
+      OpenFile *executable = fileSystem->Open(currentThead->space->filename);
+      NoffHeader noffH = currentThead->space->noffH;
+      if (vpn == numPagesInVM - 1) {
+        readLen = size - vpn * PageSize;
+      }
+      executable->ReadAt(&(machine->mainMemory[pageFrame * PageSize]), readLen, noffH.code.inFileAddr + vpn * PageSize);
+      delete executable;
+    }
+
+    entry->valid = TRUE;
+
+
+    // numPagesAllocated += 1;
+    pgEntries[entry->physicalPage] = entry;
+    currentThead->space->numValidPages += 1;
+    return PageFaultException;
+  }
     } else {
         for (entry = NULL, i = 0; i < TLBSize; i++)
     	    if (tlb[i].valid && (tlb[i].virtualPage == vpn)) {
