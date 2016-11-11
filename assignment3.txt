@@ -8,7 +8,7 @@ You should compile and run NachOS only from the nachos/code/userprog/ directory.
 follows.
 
 > ./nachos -rs s -A n -P p -x ../test/executablename
-
+./nachos -rs 0 -A 3 -x ../test/shmtest or dekker
 The -rs option makes the timer yields happen at random points in time. Here s is a randomization 
 seed (an integer). If you use different seeds in different runs, the preemption points will be different.
 Use zero as the seed value (i.e., -rs 0) for reporting all your results. This is important because
