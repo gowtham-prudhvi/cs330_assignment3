@@ -21,7 +21,7 @@ Timer *timer;				// the hardware timer device,
 
 List *ListOfFreedPages;
 
-
+TranslationEntry *pgEntries[NumPhysPages];
 unsigned nextUnallocatedPage;
 unsigned numPagesAllocated;              // number of physical frames allocated
 
@@ -127,10 +127,17 @@ Initialize(int argc, char **argv)
 
     ListOfFreedPages = new List();
 
+
+    // pgEntries = new TranslationEntry[NumPhysPages]
     schedulingAlgo = NON_PREEMPTIVE_BASE;	// Default
 
     // default
     pgReplaceAlgo = NORMAL;
+
+    for (i = 0; i < NumPhysPages; i++) {
+        pgEntries[i] = NULL;
+    }
+
     batchProcesses = new char*[MAX_BATCH_SIZE];
     ASSERT(batchProcesses != NULL);
     for (i=0; i<MAX_BATCH_SIZE; i++) {

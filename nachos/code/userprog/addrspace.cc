@@ -178,6 +178,7 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
                 else {
                     NachOSpageTable[i].physicalPage = *physicalPageNum;
                 }
+                pgEntries[NachOSpageTable[i].physicalPage] = &NachOSpageTable[i];
             }
             else {
                 NachOSpageTable[i].physicalPage = -1;
@@ -218,6 +219,12 @@ ProcessAddrSpace::ProcessAddrSpace(ProcessAddrSpace *parentSpace)
 
 ProcessAddrSpace::~ProcessAddrSpace()
 {
+    int i;
+    for (i = 0; i < numPagesInVM; i++) {
+        if (NachOSpageTable[i].valid) {
+            pgEntries[NachOSpageTable[i].physicalPage] = NULL;
+        }
+    }
    delete NachOSpageTable;
 }
 
@@ -260,7 +267,8 @@ ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
         NachOSpageTable[i].dirty = prevPageTable[i].dirty;
         NachOSpageTable[i].readOnly = prevPageTable[i].readOnly; // if the code segment was entirely on
         NachOSpageTable[i].shared = prevPageTable[i].shared;                                             // a separate page, we could set its
-        NachOSpageTable[i].cached = prevPageTable[i].cached;                                           // pages to be read-only
+        NachOSpageTable[i].cached = prevPageTable[i].cached; 
+        pgEntries[NachOSpageTable[i].physicalPage] = &NachOSpageTable[i];                                          // pages to be read-only
     }
 
     for (i = prevnumPages; i < numPagesInVM; i++) {
@@ -275,6 +283,9 @@ ProcessAddrSpace::createShmPage(int shmSize, int *createdPages)
         else {
             NachOSpageTable[i].physicalPage = *physicalPageNum;
         }
+
+        pgEntries[NachOSpageTable[i].physicalPage] = &NachOSpageTable[i];
+
         NachOSpageTable[i].valid = TRUE;
         NachOSpageTable[i].use = FALSE;
         NachOSpageTable[i].dirty = FALSE;
@@ -371,6 +382,7 @@ void ProcessAddrSpace::freePages() {
             temp = new int(NachOSpageTable[i].physicalPage);
             ListOfFreedPages->Append((void *)temp);
             count += 1;
+            pgEntries[NachOSpageTable[i].physicalPage] = NULL;
         }
 
         i += 1;

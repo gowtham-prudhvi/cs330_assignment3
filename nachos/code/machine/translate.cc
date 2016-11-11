@@ -240,6 +240,18 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     numPagesAllocated += 1;
     if (NumPhysPages == numPagesAllocated) {
       numPagesAllocated -= 1;
+
+      int newPage;
+      if (pgReplaceAlgo == FIFO) {
+      }
+      else if (pgReplaceAlgo == LRU) {
+      }
+      else if (pgReplaceAlgo == LRU_CLOCK) {
+      }
+      else if (pgReplaceAlgo == RANDOM){
+      }
+      else {
+      }
     }
 
     int *physicalPageNumber = (int *)freePages->Remove();
@@ -278,7 +290,7 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 
 
     // numPagesAllocated += 1;
-
+    pgEntries[entry->physicalPage] = entry;
     currentThead->space->numValidPages += 1;
     return PageFaultException;
   }

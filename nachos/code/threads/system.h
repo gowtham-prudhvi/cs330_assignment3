@@ -47,6 +47,7 @@ extern void Initialize(int argc, char **argv); 	// Initialization,
 extern void Cleanup();				// Cleanup, called when
 						// Nachos is done.
 
+extern TranslationEntry *pgEntries[NumPhysPages];
 extern int pgReplaceAlgo;
 extern unsigned nextUnallocatedPage;
 extern NachOSThread *currentThread;			// the thread holding the CPU
